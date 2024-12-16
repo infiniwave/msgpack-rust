@@ -247,8 +247,12 @@ impl ser::Serializer for Serializer {
     }
 
     #[inline]
-    fn serialize_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeStruct, Error> {
-        self.serialize_tuple_struct(name, len)
+    fn serialize_struct(self, _name: &'static str, len: usize) -> Result<Self::SerializeStruct, Error> {
+        let se = DefaultSerializeMap {
+            map: Vec::with_capacity(len),
+            next_key: None,
+        };
+        Ok(se)
     }
 
     #[inline]
