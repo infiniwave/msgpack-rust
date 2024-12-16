@@ -85,7 +85,7 @@ impl ser::Serializer for Serializer {
     type SerializeTupleStruct = SerializeVec;
     type SerializeTupleVariant = SerializeTupleVariant;
     type SerializeMap = DefaultSerializeMap;
-    type SerializeStruct = SerializeVec;
+    type SerializeStruct = DefaultSerializeMap;
     type SerializeStructVariant = SerializeStructVariant;
 
     #[inline]
@@ -786,20 +786,20 @@ impl ser::SerializeMap for DefaultSerializeMap {
     }
 }
 
-impl SerializeStruct for SerializeVec {
+impl SerializeStruct for DefaultSerializeMap {
     type Ok = Value;
     type Error = Error;
 
     #[inline]
-    fn serialize_field<T: ?Sized>(&mut self, _key: &'static str, value: &T) -> Result<(), Error>
-        where T: Serialize
-    {
-        ser::SerializeSeq::serialize_element(self, value)
+    fn end(self) -> Result<Value, Error> {
+        Ok(Value::Map(self.map))
     }
 
-    #[inline]
-    fn end(self) -> Result<Value, Error> {
-        ser::SerializeSeq::end(self)
+    fn serialize_field<T>(&mut self, key: &'static str, value: &T) -> Result<(), Self::Error>
+    where
+        T: ?Sized + Serialize {
+        self.map.push((Value::String(key.into()), to_value(value)?));
+        Ok(())
     }
 }
 
